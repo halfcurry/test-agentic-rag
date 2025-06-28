@@ -4,37 +4,57 @@ import argparse
 
 def convert_json_to_markdown(json_data, indent=0):
     """
-    Converts a JSON object or array into a Markdown formatted string.
+    Converts a JSON object or array into a Markdown formatted string,
+    using proper subheading levels and spacing for better readability
+    and LLM understanding. Skips the 'full_description' and 'claims' fields.
     """
     markdown_output = []
+    # Indentation for nested items
     indent_str = "    " * indent
+    # Fields to skip
+    FIELDS_TO_SKIP = {"full_description", "claims", "background"} # Using a set for efficient lookup
 
     if isinstance(json_data, dict):
         for key, value in json_data.items():
-            # For top-level keys, use a heading. For nested keys, use bold.
-            if indent == 0:
-                markdown_output.append(f"{indent_str}# {key.replace('_', ' ').title()}\n")
-            else:
-                markdown_output.append(f"{indent_str}**{key.replace('_', ' ').title()}:** ")
+            # Skip the specified fields
+            if key in FIELDS_TO_SKIP:
+                continue
 
+            # Determine the heading level, capping at H6
+            heading_level = min(6, indent + 1)
+            heading_prefix = "#" * heading_level
+
+            # Add a newline for spacing before each new section/key-value pair
+            if indent == 0 or (indent > 0 and isinstance(value, (dict, list))):
+                markdown_output.append("\n") # Extra newline for spacing sections
+
+            # Use subheadings for nested objects/arrays, or bold for simple key-values
             if isinstance(value, (dict, list)):
-                # If the value is a nested object or list, add a newline and recurse
-                markdown_output.append("\n")
+                markdown_output.append(f"{indent_str}{heading_prefix} {key.replace('_', ' ').title()}\n")
+                # Recurse for nested dictionaries or lists
                 markdown_output.append(convert_json_to_markdown(value, indent + 1))
             else:
-                # Otherwise, append the value directly
-                markdown_output.append(f"{value}\n")
+                # For simple key-value pairs, use bold key and its value
+                markdown_output.append(f"{indent_str}**{key.replace('_', ' ').title()}:** {value}\n")
+
     elif isinstance(json_data, list):
-        for item in json_data:
-            markdown_output.append(f"{indent_str}- ") # List item prefix
+        # Add a newline for spacing before a new list section
+        if indent > 0:
+            markdown_output.append("\n")
+
+        for i, item in enumerate(json_data):
+            # For each item in the list, use a list item prefix
+            markdown_output.append(f"{indent_str}- ")
             if isinstance(item, (dict, list)):
-                # If the list item is a nested object or list, add a newline and recurse
-                markdown_output.append("\n")
+                # If the list item is a nested object or list, recurse
+                # No extra newline for the current list item, it's handled inside recursion
                 markdown_output.append(convert_json_to_markdown(item, indent + 1))
             else:
+                # For simple list items
                 markdown_output.append(f"{item}\n")
+
     else:
-        # For simple values (strings, numbers, booleans)
+        # For simple values that might be passed directly (e.g., from a list)
         markdown_output.append(f"{json_data}\n")
 
     return "".join(markdown_output)
@@ -79,7 +99,7 @@ def main():
     try:
         # List all files in the input folder
         files = [f for f in os.listdir(input_path) if f.endswith('.json')]
-        files.sort() # Ensure consistent order
+        files.sort() # Ensure consistent order for processing
 
         for filename in files:
             if processed_count >= max_files_to_process:
