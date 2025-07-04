@@ -61,7 +61,8 @@ def convert_json_to_markdown(json_data, indent=0):
 
 def main():
     """
-    Main function to parse arguments, read JSON files, and convert them to Markdown.
+    Main function to parse arguments, read JSON files, and convert them to Markdown,
+    only if the 'decision' field in the JSON is 'ACCEPTED' or 'REJECTED'.
     """
     parser = argparse.ArgumentParser(
         description="Convert JSON files to Markdown files."
@@ -92,6 +93,7 @@ def main():
     os.makedirs(output_path, exist_ok=True)
 
     processed_count = 0
+    skipped_count = 0
     print(f"Processing JSON files from: {input_path}")
     print(f"Saving Markdown files to: {output_path}")
     print(f"Maximum files to process: {max_files_to_process}")
@@ -110,19 +112,25 @@ def main():
             markdown_filename = os.path.splitext(filename)[0] + ".md"
             markdown_filepath = os.path.join(output_path, markdown_filename)
 
-            print(f"Converting '{filename}' to '{markdown_filename}'...")
+            print(f"Attempting to process '{filename}'...")
 
             try:
                 with open(json_filepath, 'r', encoding='utf-8') as f:
                     json_data = json.load(f)
 
-                markdown_content = convert_json_to_markdown(json_data)
+                # Check the 'decision' field
+                decision = json_data.get('decision')
+                if decision in ["ACCEPTED", "REJECTED"]:
+                    markdown_content = convert_json_to_markdown(json_data)
 
-                with open(markdown_filepath, 'w', encoding='utf-8') as f:
-                    f.write(markdown_content)
+                    with open(markdown_filepath, 'w', encoding='utf-8') as f:
+                        f.write(markdown_content)
 
-                processed_count += 1
-                print(f"Successfully converted '{filename}'.")
+                    processed_count += 1
+                    print(f"Successfully converted '{filename}' (Decision: {decision}).")
+                else:
+                    skipped_count += 1
+                    print(f"Skipping '{filename}' due to decision '{decision}'. Only 'ACCEPTED' or 'REJECTED' are processed.")
 
             except json.JSONDecodeError:
                 print(f"Error: Could not decode JSON from '{filename}'. Skipping.")
@@ -136,7 +144,7 @@ def main():
     except Exception as e:
         print(f"An unexpected error occurred: {e}")
 
-    print(f"\nFinished processing. Converted {processed_count} JSON files to Markdown.")
+    print(f"\nFinished processing. Converted {processed_count} JSON files to Markdown. Skipped {skipped_count} files.")
 
 if __name__ == "__main__":
     main()

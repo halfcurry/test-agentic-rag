@@ -13,7 +13,7 @@ import asyncio
 from graphiti_core import Graphiti
 from graphiti_core.utils.maintenance.graph_data_operations import clear_data
 from graphiti_core.llm_client.config import LLMConfig
-from graphiti_core.llm_client.openai_client import OpenAIClient
+from graphiti_core.llm_client.openai_generic_client import OpenAIGenericClient
 from graphiti_core.embedder.openai import OpenAIEmbedder, OpenAIEmbedderConfig
 from graphiti_core.cross_encoder.openai_reranker_client import OpenAIRerankerClient
 from dotenv import load_dotenv
@@ -84,7 +84,7 @@ class GraphitiClient:
             )
             
             # Create OpenAI LLM client
-            llm_client = OpenAIClient(config=llm_config)
+            llm_client = OpenAIGenericClient(config=llm_config)
             
             # Create OpenAI embedder
             embedder = OpenAIEmbedder(
@@ -329,7 +329,7 @@ class GraphitiClient:
                 base_url=self.llm_base_url
             )
             
-            llm_client = OpenAIClient(config=llm_config)
+            llm_client = OpenAIGenericClient(config=llm_config)
             
             embedder = OpenAIEmbedder(
                 config=OpenAIEmbedderConfig(

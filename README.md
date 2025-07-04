@@ -44,6 +44,18 @@ venv\Scripts\activate     # On Windows
 pip install -r requirements.txt
 ```
 
+### 2.1 Download HUPD dataset
+
+```bash
+python download_and_extract_hupd.py 2018
+```
+
+### 2.2 Convert a few docs to markdown
+
+```bash
+python json_to_md.py 10000 hupd_extracted/2018 documents/
+```
+
 ### 3. Set up required tables in Postgres
 
 Execute the SQL in `sql/schema.sql` to create all necessary tables, indexes, and functions.

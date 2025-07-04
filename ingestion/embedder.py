@@ -67,7 +67,7 @@ class EmbeddingGenerator:
         
         if model not in self.model_configs:
             logger.warning(f"Unknown model {model}, using default config")
-            self.config = {"dimensions": 1536, "max_tokens": 8191}
+            self.config = {"dimensions": 768, "max_tokens": 8191}
         else:
             self.config = self.model_configs[model]
     
