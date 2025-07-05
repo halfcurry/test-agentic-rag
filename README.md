@@ -50,10 +50,10 @@ pip install -r requirements.txt
 python download_and_extract_hupd.py 2018
 ```
 
-### 2.2 Convert a few docs to markdown
+### 2.2 Filter docs with ACCEPTED/REJECTED decision
 
 ```bash
-python json_to_md.py 10000 hupd_extracted/2018 documents/
+python filter_jsons.py 10000 hupd_extracted/2018 documents/
 ```
 
 ### 3. Set up required tables in Postgres

@@ -5,10 +5,13 @@ Graph utilities for Neo4j/Graphiti integration.
 import os
 import json
 import logging
-from typing import List, Dict, Any, Optional, Tuple
+from typing import List, Dict, Any, Optional, Tuple, Type
 from datetime import datetime, timezone
 from contextlib import asynccontextmanager
 import asyncio
+
+from pydantic import BaseModel
+from graphiti_core.nodes import EpisodeType
 
 from graphiti_core import Graphiti
 from graphiti_core.utils.maintenance.graph_data_operations import clear_data
@@ -126,39 +129,47 @@ class GraphitiClient:
     
     async def add_episode(
         self,
-        episode_id: str,
-        content: str,
-        source: str,
-        timestamp: Optional[datetime] = None,
-        metadata: Optional[Dict[str, Any]] = None
+        name: str,
+        episode_body: str,
+        source: EpisodeType,
+        source_description: Optional[str] = None,
+        reference_time: Optional[datetime] = None,
+        entity_types: Optional[Dict[str, Type[BaseModel]]] = None,
+        edge_types: Optional[Dict[str, Type[BaseModel]]] = None,
+        edge_type_map: Optional[Dict[Tuple[str, str], List[str]]] = None,
+        excluded_entity_types: Optional[List[str]] = None,
     ):
         """
-        Add an episode to the knowledge graph.
-        
+        Adds an episode to the knowledge graph, mirroring the graphiti.add_episode signature.
+
         Args:
-            episode_id: Unique episode identifier
-            content: Episode content
-            source: Source of the content
-            timestamp: Episode timestamp
-            metadata: Additional metadata
+            name: The name or unique identifier for the episode.
+            episode_body: The content of the episode (e.g., text, JSON data).
+            source: The type of the episode source (e.g., EpisodeType.text, EpisodeType.json).
+            source_description: A description of the source (e.g., "news article").
+            reference_time: The timestamp for when this episode occurred.
+            entity_types: A dictionary of custom Pydantic models for entity extraction.
+            edge_types: A dictionary of custom Pydantic models for edge extraction.
+            edge_type_map: Defines which edge types can exist between entity types.
+            excluded_entity_types: A list of entity types to exclude from extraction.
         """
         if not self._initialized:
             await self.initialize()
-        
-        episode_timestamp = timestamp or datetime.now(timezone.utc)
-        
-        # Import EpisodeType for proper source handling
-        from graphiti_core.nodes import EpisodeType
-        
+
+        # Directly pass all arguments to the underlying graphiti method
         await self.graphiti.add_episode(
-            name=episode_id,
-            episode_body=content,
-            source=EpisodeType.text,  # Always use text type for our content
-            source_description=source,
-            reference_time=episode_timestamp
+            name=name,
+            episode_body=episode_body,
+            source=source,
+            source_description=source_description,
+            reference_time=reference_time,
+            entity_types=entity_types,
+            edge_types=edge_types,
+            edge_type_map=edge_type_map,
+            excluded_entity_types=excluded_entity_types,
         )
-        
-        logger.info(f"Added episode {episode_id} to knowledge graph")
+
+        logger.info(f"Added episode {name} to knowledge graph")
     
     async def search(
         self,
